@@ -10,25 +10,20 @@ function login() {
         VK.init({
             apiId: 5900739
         });
-        VK.Auth.getLoginStatus(result => {
-            if (result.status !== 'connected') {
-                VK.Auth.login((r) => {
-                    if (r.session) {
-                        resolve();
-                    } else {
-                        reject()
-                    }
-                }, PHOTOS_ACCSESS_PERMISSION);
-            } else {
+
+        VK.Auth.login((r) => {
+            if (r.session) {
                 resolve();
+            } else {
+                reject()
             }
-        });
+        }, PHOTOS_ACCSESS_PERMISSION);
     });
 }
 
-
 function callAPI(method, params) {
-    return new Promise(function (resolve, reject) {
+    params.v = 5.67;
+    return new Promise((resolve, reject) => {
         VK.api(method, params, function (result) {
             if (result.error) {
                 reject();
@@ -39,24 +34,44 @@ function callAPI(method, params) {
     });
 }
 
-function render(data) {
-    let items = data.items;
+function getAlbums() {
+
+    return callAPI('photos.getAlbums', {need_system: 1});
+
+}
+
+function getPhotos(albums) {
+
+    let p = [];
+    albums.forEach(item => {
+        p.push(callAPI('photos.get', {v: 5.67, album_id: item.id, extended: 1}));
+    });
+
+    return Promise.all(p);
+}
+
+function render(photos) {
     let html = '';
 
-    items.forEach(item => {
-        let values = {
-            src: item.photo_130,
-            likes: item.likes.count,
-            reposts: item.reposts.count,
-            comments: item.comments.count
-        };
+    photos.forEach(data => {
+        let items = data.items;
 
-        html += itemRenderFn(values);
+        items.forEach(item => {
+            let values = {
+                src: item.photo_75,
+                likes: item.likes.count,
+                reposts: item.reposts.count,
+                comments: item.comments.count
+            };
+
+            html += itemRenderFn(values);
+        });
     });
     photosList.innerHTML = html;
 }
 
 login()
-    .then(() => callAPI('photos.get', {v: 5.67, album_id: 'profile', extended: 1}))
-    .then(result => render(result))
+    .then(() => getAlbums())
+    .then(albums => getPhotos(albums.items))
+    .then(photos => render(photos))
     .catch(() => alert('не удалось получить данные из VK'));
