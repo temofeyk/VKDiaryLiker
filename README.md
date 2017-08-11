@@ -1,4 +1,4 @@
-## LoftSchool example project
+## VK Liker project
 
 ### Доступные команды
 

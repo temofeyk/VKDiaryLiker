@@ -6,6 +6,7 @@ let itemRenderFn = require('./item.hbs');
 
 function login() {
     const PHOTOS_ACCSESS_PERMISSION = 4;  // https://vk.com/dev/permissions
+
     return new Promise(function (resolve, reject) {
         VK.init({
             apiId: 5900739
@@ -23,6 +24,7 @@ function login() {
 
 function callAPI(method, params) {
     params.v = 5.67;
+
     return new Promise((resolve, reject) => {
         VK.api(method, params, function (result) {
             if (result.error) {
@@ -43,8 +45,9 @@ function getAlbums() {
 function getPhotos(albums) {
 
     let p = [];
+
     albums.forEach(item => {
-        p.push(callAPI('photos.get', {v: 5.67, album_id: item.id, extended: 1}));
+        p.push(callAPI('photos.get', {album_id: item.id, extended: 1}));
     });
 
     return Promise.all(p);
